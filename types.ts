@@ -2,6 +2,29 @@
 import React from 'react';
 
 export type Language = 'es' | 'en';
+export type UserLevel = 'primary' | 'bachillerato' | 'admin';
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  level: UserLevel;
+  avatar?: string;
+  points: number; // For gamification
+  subscriptionTier: 'FREE' | 'PREMIUM' | 'INSTITUTION';
+  subscriptionStatus: 'active' | 'canceled' | 'past_due';
+  usageQuota: {
+    aiQueries: number;
+    flashcardsGenerated: number;
+    lastResetDate: string;
+  };
+}
+
+export const FREE_TIER_LIMITS = {
+  DAILY_AI_QUERIES: 5,
+  DAILY_FLASHCARDS: 3,
+  ALLOW_DIAGNOSTIC: false,
+  ALLOW_CAREER: false,
+};
 
 export enum ViewState {
   DASHBOARD = 'DASHBOARD',
@@ -17,18 +40,21 @@ export enum ViewState {
   REWARDS = 'REWARDS',
   SETTINGS = 'SETTINGS',
   PRICING = 'PRICING',
-  REPOSITORY = 'REPOSITORY'
+  REPOSITORY = 'REPOSITORY',
+  WHITEBOARD = 'WHITEBOARD',
+  TEACHER_REPORT = 'TEACHER_REPORT',
+  PAYMENTS = 'PAYMENTS'
 }
 
 export interface AppMessage {
-    id: string;
-    senderId: string;
-    senderName: string;
-    receiverId: string;
-    content: string;
-    type: 'SUPPORT_TICKET' | 'ADMIN_ALERT' | 'SYSTEM_NOTIFY' | 'ADMIN_REPLY';
-    timestamp: string;
-    read: boolean;
+  id: string;
+  senderId: string;
+  senderName: string;
+  receiverId: string;
+  content: string;
+  type: 'SUPPORT_TICKET' | 'ADMIN_ALERT' | 'SYSTEM_NOTIFY' | 'ADMIN_REPLY';
+  timestamp: string;
+  read: boolean;
 }
 
 export interface GroundingChunk {
@@ -84,19 +110,19 @@ export interface Assignment {
 
 // Nueva interfaz para Planes
 export interface EducationalPlan {
-    id: string;
-    name: string;
-    description: string;
-    allowedViews: string[]; // List of ViewState IDs
+  id: string;
+  name: string;
+  description: string;
+  allowedViews: string[]; // List of ViewState IDs
 }
 
 export const SCHOOL_VALUES = [
-  "Autonomía", 
-  "Excelencia", 
-  "Curiosidad", 
-  "Resiliencia", 
-  "Colaboración", 
-  "Impacto Social", 
+  "Autonomía",
+  "Excelencia",
+  "Curiosidad",
+  "Resiliencia",
+  "Colaboración",
+  "Impacto Social",
   "Felicidad"
 ];
 
@@ -121,6 +147,7 @@ export interface ClassSession {
   isWrittenExam?: boolean;
   questions?: { id: number; text: string; options: string[] }[];
   isLocked?: boolean;
+  score?: number; // 0-100 score for Mastery Learning
 }
 
 export interface Module {
@@ -144,5 +171,5 @@ export interface Subject {
   icon: React.ReactNode;
   description: string;
   tracks: SkillTrack[];
-  colorTheme: 'amber' | 'sky' | 'rose' | 'emerald' | 'indigo' | 'fuchsia' | 'teal' | 'violet'; 
+  colorTheme: 'amber' | 'sky' | 'rose' | 'emerald' | 'indigo' | 'fuchsia' | 'teal' | 'violet';
 }

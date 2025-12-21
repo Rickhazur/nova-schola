@@ -2,22 +2,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { Infraction, StoreItem, EducationalPlan, ViewState, AppMessage } from "../types";
 
-const getEnv = (key: string) => {
-  try {
-    if (typeof process !== 'undefined' && process.env) {
-      return process.env[key];
-    }
-  } catch (e) {
-    console.warn("Env var access failed");
-  }
-  return undefined;
-};
-
-const rawUrl = getEnv('REACT_APP_SUPABASE_URL');
-const rawKey = getEnv('REACT_APP_SUPABASE_KEY');
-
-const SUPABASE_URL = rawUrl || "https://fwpnhxmktwvmsvrxbuat.supabase.co";
-const SUPABASE_KEY = rawKey || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3cG5oeG1rdHd2bXN2cnhidWF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNjc2NzQsImV4cCI6MjA4MDY0MzY3NH0.75kyLHHlec5x4DhGXhbOko4oMIy6jdz2tFEOerNE8c0";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const isOffline = !SUPABASE_URL || !SUPABASE_KEY;
 export const supabase = isOffline ? null : createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -79,12 +65,18 @@ export const updateUserPassword = async (newPass: string) => {
 =================================================== */
 
 const DEFAULT_PLANS: EducationalPlan[] = [
-  { id: 'plan_essential', name: 'Plan Esencial', description: 'Enfoque academico.',
-    allowedViews: [ViewState.DASHBOARD, ViewState.SCHEDULE, ViewState.CURRICULUM, ViewState.REPOSITORY, ViewState.PROGRESS, ViewState.AI_CONSULTANT] },
-  { id: 'plan_standard', name: 'Plan Estandar IB', description: 'Programa completo.',
-    allowedViews: [ViewState.DASHBOARD, ViewState.SCHEDULE, ViewState.CURRICULUM, ViewState.REPOSITORY, ViewState.AI_CONSULTANT, ViewState.FLASHCARDS, ViewState.METRICS, ViewState.PROGRESS, ViewState.REWARDS] },
-  { id: 'plan_elite', name: 'Plan Elite', description: 'Acceso total.',
-    allowedViews: [ViewState.DASHBOARD, ViewState.SCHEDULE, ViewState.CURRICULUM, ViewState.REPOSITORY, ViewState.AI_CONSULTANT, ViewState.FLASHCARDS, ViewState.METRICS, ViewState.SOCIAL, ViewState.REWARDS, ViewState.CAREER, ViewState.PROGRESS, ViewState.SETTINGS] }
+  {
+    id: 'plan_essential', name: 'Plan Esencial', description: 'Enfoque academico.',
+    allowedViews: [ViewState.DASHBOARD, ViewState.SCHEDULE, ViewState.CURRICULUM, ViewState.REPOSITORY, ViewState.PROGRESS, ViewState.AI_CONSULTANT]
+  },
+  {
+    id: 'plan_standard', name: 'Plan Estandar IB', description: 'Programa completo.',
+    allowedViews: [ViewState.DASHBOARD, ViewState.SCHEDULE, ViewState.CURRICULUM, ViewState.REPOSITORY, ViewState.AI_CONSULTANT, ViewState.FLASHCARDS, ViewState.METRICS, ViewState.PROGRESS, ViewState.REWARDS]
+  },
+  {
+    id: 'plan_elite', name: 'Plan Elite', description: 'Acceso total.',
+    allowedViews: [ViewState.DASHBOARD, ViewState.SCHEDULE, ViewState.CURRICULUM, ViewState.REPOSITORY, ViewState.AI_CONSULTANT, ViewState.FLASHCARDS, ViewState.METRICS, ViewState.SOCIAL, ViewState.REWARDS, ViewState.CAREER, ViewState.PROGRESS, ViewState.SETTINGS]
+  }
 ];
 
 export const fetchPlansConfig = async (): Promise<EducationalPlan[]> => DEFAULT_PLANS;
@@ -107,12 +99,12 @@ export const getUserEconomy = async (uid: string) => {
 };
 
 export const subscribeToEconomy = (userId: string, onUpdate: (coins: number) => void) => {
-  if (!supabase) return () => {};
+  if (!supabase) return () => { };
   console.log('📡 Suscribiendo a economy para:', userId);
-  
+
   const channel = supabase
     .channel(`economy-${userId}`)
-    .on('postgres_changes', 
+    .on('postgres_changes',
       { event: 'UPDATE', schema: 'public', table: 'economy', filter: `user_id=eq.${userId}` },
       (payload) => {
         console.log('💰 Cambio en economy:', payload);
@@ -128,15 +120,15 @@ export const subscribeToEconomy = (userId: string, onUpdate: (coins: number) => 
 
 export const adminAwardCoins = async (studentId: string, amount: number) => {
   if (!supabase) return false;
-  
+
   const { data: current } = await supabase.from("economy").select("coins").eq("user_id", studentId).single();
   const newTotal = (current?.coins || 0) + amount;
-  
+
   const { error } = await supabase
     .from("economy")
     .update({ coins: newTotal, last_updated: new Date().toISOString() })
     .eq("user_id", studentId);
-  
+
   if (error) {
     console.error('Error coins:', error);
     return false;
@@ -204,7 +196,7 @@ export const saveAcademicResult = async (uid: string, result: any) => {
 
 export const assignRemedialPlan = async (uid: string, subject: string, customPlan?: any[]) => {
   if (!supabase) return false;
-  
+
   // Plan por defecto de Matemáticas (4 semanas)
   const defaultMathPlan = [
     { title: "Sesión 1: Factorización Básica", topic: "Identificar casos de factorización", duration: "25 min", status: "pending" },
@@ -237,12 +229,12 @@ export const assignRemedialPlan = async (uid: string, subject: string, customPla
     // Actualizar plan existente
     const { error } = await supabase
       .from("academic_results")
-      .update({ 
+      .update({
         remedial_plan: planToSave,
         timestamp: new Date().toISOString()
       })
       .eq("id", existing.id);
-    
+
     if (error) {
       console.error('Error actualizando plan:', error);
       return false;
@@ -257,7 +249,7 @@ export const assignRemedialPlan = async (uid: string, subject: string, customPla
         remedial_plan: planToSave,
         timestamp: new Date().toISOString()
       });
-    
+
     if (error) {
       console.error('Error creando plan:', error);
       return false;
@@ -271,19 +263,19 @@ export const assignRemedialPlan = async (uid: string, subject: string, customPla
 // Guardar WhatsApp del acudiente
 export const saveGuardianPhone = async (uid: string, phone: string) => {
   if (!supabase) return false;
-  
+
   const cleanPhone = phone.replace(/\D/g, ''); // Solo números
-  
+
   const { error } = await supabase
     .from("profiles")
     .update({ guardian_phone: cleanPhone })
     .eq("id", uid);
-  
+
   if (error) {
     console.error('Error guardando teléfono:', error);
     return false;
   }
-  
+
   console.log('📱 WhatsApp del acudiente guardado:', cleanPhone);
   return true;
 };
@@ -291,13 +283,13 @@ export const saveGuardianPhone = async (uid: string, phone: string) => {
 // Obtener WhatsApp del acudiente
 export const getGuardianPhone = async (uid: string) => {
   if (!supabase) return null;
-  
+
   const { data, error } = await supabase
     .from("profiles")
     .select("guardian_phone")
     .eq("id", uid)
     .single();
-  
+
   if (error || !data) return null;
   return data.guardian_phone;
 };
@@ -311,12 +303,12 @@ export const generateWhatsAppLink = (phone: string, studentName: string, report:
 }) => {
   // Limpiar teléfono (solo números)
   let cleanPhone = phone.replace(/\D/g, '');
-  
+
   // Agregar código de país si no lo tiene (Colombia por defecto)
   if (cleanPhone.length === 10) {
     cleanPhone = '57' + cleanPhone;
   }
-  
+
   // Construir mensaje
   const message = `
 📚 *NOVA SCHOLA - Reporte de Tutoría*
@@ -333,17 +325,45 @@ ${report.feedback ? `💬 *Feedback del Tutor:*\n${report.feedback}` : ''}
 ---
 _Reporte generado automáticamente por Nova Schola AI_
   `.trim();
-  
+
   // Codificar mensaje para URL
   const encodedMessage = encodeURIComponent(message);
-  
+
   return `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
+};
+
+// Generar link de Email para Docente
+export const generateTeacherEmailLink = (studentName: string, report: {
+  sessionTitle: string;
+  score?: number;
+  feedback?: string;
+  date: string;
+}) => {
+  const subject = `Reporte de Progreso Nova Schola: ${studentName}`;
+  const body = `
+Estimado Docente,
+
+Comparto el reporte de progreso de ${studentName} en la sesión "${report.sessionTitle}".
+
+📅 Fecha: ${report.date}
+📖 Sesión: ${report.sessionTitle}
+📊 Calificación: ${report.score !== undefined ? report.score + '%' : 'N/A'}
+${report.score !== undefined && report.score >= 90 ? '✅ Estado: Aprobado' : '⚠️ Estado: Refuerzo sugerido'}
+
+💬 Observaciones del Tutor AI:
+${report.feedback || 'Sin comentarios adicionales.'}
+
+Atentamente,
+Plataforma Nova Schola
+  `.trim();
+
+  return `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 };
 
 // Obtener reportes de sesiones para Admin (con info del acudiente)
 export const getSessionReportsForAdmin = async () => {
   if (!supabase) return [];
-  
+
   const { data, error } = await supabase
     .from("lesson_progress")
     .select(`
@@ -357,19 +377,19 @@ export const getSessionReportsForAdmin = async () => {
     .eq("status", "completed")
     .order("completed_at", { ascending: false })
     .limit(50);
-  
+
   if (error) {
     console.error('Error obteniendo reportes:', error);
     return [];
   }
-  
+
   return data || [];
 };
 
 // Obtener plan de nivelación de un estudiante
 export const getStudentRemedialPlan = async (uid: string) => {
   if (!supabase) return null;
-  
+
   const { data, error } = await supabase
     .from("academic_results")
     .select("*")
@@ -378,7 +398,7 @@ export const getStudentRemedialPlan = async (uid: string) => {
     .order("timestamp", { ascending: false })
     .limit(1)
     .single();
-  
+
   if (error || !data) return null;
   return data;
 };
@@ -386,26 +406,26 @@ export const getStudentRemedialPlan = async (uid: string) => {
 // Actualizar progreso de una sesión del plan
 export const updateRemedialSessionStatus = async (uid: string, sessionIndex: number, newStatus: string) => {
   if (!supabase) return false;
-  
+
   const { data: current } = await supabase
     .from("academic_results")
     .select("id, remedial_plan")
     .eq("student_id", uid)
     .not("remedial_plan", "is", null)
     .single();
-  
+
   if (!current || !current.remedial_plan) return false;
-  
+
   const updatedPlan = [...current.remedial_plan];
   if (updatedPlan[sessionIndex]) {
     updatedPlan[sessionIndex].status = newStatus;
   }
-  
+
   const { error } = await supabase
     .from("academic_results")
     .update({ remedial_plan: updatedPlan })
     .eq("id", current.id);
-  
+
   return !error;
 };
 export const unlockDailySession = async (uid: string) => true;
@@ -415,15 +435,15 @@ export const unlockDailySession = async (uid: string) => true;
 =================================================== */
 
 export const startLessonSession = async (
-  studentId: string, 
-  lessonId: string, 
-  lessonTitle: string, 
+  studentId: string,
+  lessonId: string,
+  lessonTitle: string,
   subject: string
 ) => {
   if (!supabase) return null;
-  
+
   console.log('🎓 Iniciando sesión:', { studentId, lessonId, lessonTitle });
-  
+
   const { data, error } = await supabase
     .from("lesson_progress")
     .insert({
@@ -436,12 +456,12 @@ export const startLessonSession = async (
     })
     .select()
     .single();
-  
+
   if (error) {
     console.error('❌ Error iniciando sesión:', error);
     return null;
   }
-  
+
   console.log('✅ Sesión iniciada:', data);
   return data;
 };
@@ -458,11 +478,11 @@ export const completeLessonSession = async (
   }
 ) => {
   if (!supabase) return false;
-  
+
   const canContinue = (sessionData.homeworkScore || 0) >= 90;
-  
+
   console.log('🏁 Completando sesión:', { studentId, lessonId, ...sessionData, canContinue });
-  
+
   const { error } = await supabase
     .from("lesson_progress")
     .update({
@@ -478,12 +498,12 @@ export const completeLessonSession = async (
     .eq('student_id', studentId)
     .eq('lesson_id', lessonId)
     .eq('status', 'in_progress');
-  
+
   if (error) {
     console.error('❌ Error completando sesión:', error);
     return false;
   }
-  
+
   console.log('✅ Sesión completada. Puede continuar:', canContinue);
   return true;
 };
@@ -495,11 +515,11 @@ export const saveHomeworkGrade = async (
   feedback: string
 ) => {
   if (!supabase) return { score: 0, canContinue: false };
-  
+
   const canContinue = score >= 90;
-  
+
   console.log('📝 Guardando nota de tarea:', { studentId, lessonId, score, canContinue });
-  
+
   const { error } = await supabase
     .from("lesson_progress")
     .update({
@@ -510,65 +530,65 @@ export const saveHomeworkGrade = async (
     })
     .eq('student_id', studentId)
     .eq('lesson_id', lessonId);
-  
+
   if (error) {
     console.error('❌ Error guardando nota:', error);
     return { score: 0, canContinue: false };
   }
-  
+
   console.log('✅ Tarea calificada: ' + score + '%. Puede continuar: ' + canContinue);
   return { score, canContinue };
 };
 
 export const getStudentProgress = async (studentId: string) => {
   if (!supabase) return [];
-  
+
   const { data, error } = await supabase
     .from("lesson_progress")
     .select("*")
     .eq("student_id", studentId)
     .order('started_at', { ascending: false });
-  
+
   if (error) {
     console.error('Error obteniendo progreso:', error);
     return [];
   }
-  
+
   return data || [];
 };
 
 export const canStudentContinue = async (studentId: string, currentLessonId: string) => {
   if (!supabase) return false;
-  
+
   const { data, error } = await supabase
     .from("lesson_progress")
     .select("can_continue, homework_score")
     .eq("student_id", studentId)
     .eq("lesson_id", currentLessonId)
     .single();
-  
+
   if (error || !data) return false;
-  
+
   return data.can_continue === true;
 };
 
 export const getStudentProgressSummary = async (studentId: string) => {
   if (!supabase) return null;
-  
+
   const { data, error } = await supabase
     .from("lesson_progress")
     .select("*")
     .eq("student_id", studentId)
     .order('started_at', { ascending: true });
-  
+
   if (error || !data || data.length === 0) return null;
-  
+
   const completed = data.filter(d => d.status === 'completed').length;
   const total = data.length;
   const scores = data.filter(d => d.homework_score != null).map(d => d.homework_score);
   const avgScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
   const lastSession = data[data.length - 1];
-  
+
   return {
     totalSessions: total,
     completedSessions: completed,
@@ -582,7 +602,7 @@ export const getStudentProgressSummary = async (studentId: string) => {
 
 export const saveSessionFeedback = async (feedback: string, completed: boolean, uid: string) => {
   if (!supabase) return false;
-  
+
   const { data: currentSession } = await supabase
     .from("lesson_progress")
     .select("*")
@@ -591,7 +611,7 @@ export const saveSessionFeedback = async (feedback: string, completed: boolean, 
     .order('started_at', { ascending: false })
     .limit(1)
     .single();
-  
+
   if (!currentSession) {
     console.log('⚠️ No hay sesión activa, creando registro');
     const { error } = await supabase
@@ -607,7 +627,7 @@ export const saveSessionFeedback = async (feedback: string, completed: boolean, 
       });
     return !error;
   }
-  
+
   const { error } = await supabase
     .from("lesson_progress")
     .update({
@@ -616,12 +636,12 @@ export const saveSessionFeedback = async (feedback: string, completed: boolean, 
       feedback: feedback
     })
     .eq('id', currentSession.id);
-  
+
   if (error) {
     console.error('❌ Error guardando feedback:', error);
     return false;
   }
-  
+
   console.log('✅ Feedback guardado');
   return true;
 };
@@ -684,7 +704,7 @@ export const fetchGlobalConfig = async () => {
 export const sendFlashMessage = async (msg: AppMessage) => {
   if (!supabase) return false;
   console.log('📤 Enviando mensaje a:', msg.receiverId);
-  
+
   // 1. Guardar en base de datos
   const { error: dbError } = await supabase.from('messages').insert({
     sender_id: msg.senderId,
@@ -695,11 +715,11 @@ export const sendFlashMessage = async (msg: AppMessage) => {
     read: false,
     created_at: new Date().toISOString()
   });
-  
+
   if (dbError) {
     console.error('Error guardando mensaje:', dbError);
   }
-  
+
   // 2. Enviar por Realtime Broadcast para notificación instantánea
   try {
     const channel = supabase.channel(`flash-${msg.receiverId}`);
@@ -710,14 +730,14 @@ export const sendFlashMessage = async (msg: AppMessage) => {
   } catch (e) {
     console.log('Broadcast opcional falló, mensaje guardado en DB');
   }
-  
+
   return true;
 };
 
 export const subscribeToMessages = (userId: string, callback: (msg: AppMessage) => void) => {
-  if (!supabase) return () => {};
+  if (!supabase) return () => { };
   console.log('📡 Suscribiendo a mensajes:', userId);
-  
+
   // Suscribirse a Broadcast
   const channel = supabase
     .channel(`flash-${userId}`)
@@ -726,7 +746,7 @@ export const subscribeToMessages = (userId: string, callback: (msg: AppMessage) 
       callback(payload.payload as AppMessage);
     })
     .subscribe();
-  
+
   // También suscribirse a cambios en la tabla messages
   const dbChannel = supabase
     .channel(`messages-db-${userId}`)
@@ -748,8 +768,8 @@ export const subscribeToMessages = (userId: string, callback: (msg: AppMessage) 
       }
     )
     .subscribe();
-  
-  return () => { 
+
+  return () => {
     supabase.removeChannel(channel);
     supabase.removeChannel(dbChannel);
   };
@@ -758,19 +778,19 @@ export const subscribeToMessages = (userId: string, callback: (msg: AppMessage) 
 // Obtener mensajes para Admin (tickets de soporte)
 export const getAdminMessages = async () => {
   if (!supabase) return [];
-  
+
   const { data, error } = await supabase
     .from('messages')
     .select('*')
     .eq('type', 'SUPPORT_TICKET') // Simplified query to avoid UUID issues with 'ADMIN_INBOX'
     .order('created_at', { ascending: false })
     .limit(50);
-  
+
   if (error) {
     console.error('Error obteniendo mensajes:', JSON.stringify(error));
     return [];
   }
-  
+
   return data.map((msg: any) => ({
     id: msg.id,
     senderId: msg.sender_id,
@@ -786,20 +806,20 @@ export const getAdminMessages = async () => {
 // Marcar mensaje como leído
 export const markMessageAsRead = async (messageId: string) => {
   if (!supabase) return false;
-  
+
   const { error } = await supabase
     .from('messages')
     .update({ read: true })
     .eq('id', messageId);
-  
+
   return !error;
 };
 
 // Suscribirse a nuevos tickets (para Admin)
 export const subscribeToAdminMessages = (callback: (msg: AppMessage) => void) => {
-  if (!supabase) return () => {};
+  if (!supabase) return () => { };
   console.log('📡 Admin suscrito a tickets de soporte');
-  
+
   const channel = supabase
     .channel('admin-messages')
     .on('postgres_changes',
@@ -823,7 +843,7 @@ export const subscribeToAdminMessages = (callback: (msg: AppMessage) => void) =>
       }
     )
     .subscribe();
-  
+
   return () => { supabase.removeChannel(channel); };
 };
 

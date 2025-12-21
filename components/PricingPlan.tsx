@@ -1,139 +1,198 @@
 
-import React from 'react';
-import { Zap, Database, Globe, Receipt, TrendingUp, AlertCircle, Info } from 'lucide-react';
+import React, { useState } from 'react';
+import { Check, X, Star, Zap, School, Shield, Rocket, HelpCircle } from 'lucide-react';
+import { ViewState } from '../types';
 
-const PricingPlan: React.FC = () => {
+/* 
+  NOTE: This component handles the display of pricing tiers.
+  In a real integration, the "Choose Plan" buttons would trigger 
+  a Stripe Checkout session via a backend API.
+*/
+
+interface PricingPlanProps {
+  onPlanSelect?: (planId: string) => void;
+  onClose?: () => void;
+}
+
+const PricingPlan: React.FC<PricingPlanProps> = ({ onPlanSelect, onClose }) => {
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+
+  const plans = [
+    {
+      id: 'free',
+      name: 'Estudiante Explorador',
+      price: 0,
+      description: 'Herramientas esenciales para empezar tu viaje.',
+      icon: <Rocket className="w-6 h-6 text-slate-400" />,
+      features: [
+        'Acceso al Dashboard',
+        '3 Flashcards diarias',
+        '5 Consultas al Tutor AI (Básico)',
+        'Seguimiento de Progreso simple',
+        'Acceso al Repositorio',
+      ],
+      missing: [
+        'Diagnóstico con Visión (Fotos)',
+        'Tutor AI Ilimitado (Pro)',
+        'Planes de Recuperación',
+        'Orientación Vocacional',
+        'Sin Anuncios'
+      ],
+      cta: 'Tu Plan Actual',
+      color: 'slate',
+      popular: false
+    },
+    {
+      id: 'premium',
+      name: 'Estudiante Genio',
+      price: billingCycle === 'monthly' ? 11.99 : 119,
+      description: 'Desbloquea tu máximo potencial académico.',
+      icon: <Zap className="w-6 h-6 text-white" />,
+      features: [
+        'Todo lo del plan Explorador',
+        'Tutor AI Ilimitado (Modelo Pro)',
+        'Escaneo de Tareas (Vision AI)',
+        'Planes de Recuperación Personalizados',
+        'Orientación Vocacional Completa',
+        'Flashcards Ilimitadas',
+        'Acceso Prioritario a Nuevas Funciones'
+      ],
+      missing: [],
+      cta: 'Desbloquear Premium',
+      color: 'indigo',
+      popular: true
+    },
+    {
+      id: 'school',
+      name: 'Institucional',
+      price: null, // Contact sales
+      description: 'Para colegios que buscan excelencia educativa.',
+      icon: <School className="w-6 h-6 text-cyan-600" />,
+      features: [
+        'Licencias para todos los estudiantes',
+        'Dashboard para Profesores',
+        'Reportes de Rendimiento Masivos',
+        'Integración con LMS existente',
+        'Soporte Prioritario Dedicado',
+        'Personalización de Marca'
+      ],
+      missing: [],
+      cta: 'Contactar Ventas',
+      color: 'cyan',
+      popular: false
+    }
+  ];
+
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-fade-in pb-10">
-      <header className="flex items-center gap-4 border-b border-stone-200 pb-6">
-        <div className="p-3 bg-emerald-100 rounded-2xl text-emerald-600">
-             <Receipt className="w-8 h-8" />
-        </div>
-        <div>
-            <h2 className="text-3xl font-bold text-stone-800">Planes y Costos</h2>
-            <p className="text-stone-500 mt-1">Estimación de costos operativos por estudiante activo.</p>
-        </div>
-      </header>
+    <div className="min-h-full p-4 md:p-8 animate-fade-in pb-20">
+      <div className="max-w-5xl mx-auto text-center mb-12">
+        <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">
+          Invierte en tu <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-cyan-500">Futuro</span>
+        </h2>
+        <p className="text-slate-500 text-lg max-w-2xl mx-auto">
+          Elige el plan que mejor se adapte a tus necesidades. Potencia tu aprendizaje con la tecnología más avanzada de Inteligencia Artificial.
+        </p>
 
-      {/* Hero Cost Card */}
-      <div className="bg-gradient-to-br from-stone-900 via-slate-800 to-stone-900 text-white p-8 md:p-10 rounded-3xl shadow-2xl relative overflow-hidden">
-         {/* Background Effect */}
-         <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500 rounded-full blur-[120px] opacity-10"></div>
-         
-         <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
-           <div>
-             <div className="flex items-center gap-2 mb-2 text-emerald-400 font-bold uppercase tracking-wider text-xs">
-                 <TrendingUp className="w-4 h-4" /> Costo Variable
-             </div>
-             <h3 className="text-2xl font-bold mb-2">Costo Total Estimado</h3>
-             <p className="text-stone-400 text-sm max-w-sm leading-relaxed">
-                 Calculado para un estudiante de alto rendimiento (1 hora diaria de uso intensivo de todas las herramientas IA).
-             </p>
-           </div>
-           <div className="text-right bg-white/5 p-6 rounded-2xl border border-white/10 backdrop-blur-sm">
-             <span className="text-5xl md:text-6xl font-black text-emerald-400 tracking-tight">~$3.00</span>
-             <div className="text-sm font-medium text-stone-400 mt-1">USD / Mes / Estudiante</div>
-           </div>
-         </div>
-      </div>
-
-      <h3 className="text-lg font-bold text-stone-800 flex items-center gap-2 mt-8">
-          <Info className="w-5 h-5 text-stone-400" /> Desglose de Servicios
-      </h3>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        {/* Gemini Live API */}
-        <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm hover:shadow-md transition-shadow">
-           <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-indigo-100 rounded-xl text-indigo-600">
-                <Zap className="w-6 h-6" />
-              </div>
-              <div>
-                <h4 className="font-bold text-stone-800 text-lg">Tutoría en Vivo</h4>
-                <p className="text-xs text-stone-500">Gemini Multimodal Live</p>
-              </div>
-           </div>
-           <p className="text-3xl font-bold text-stone-800 mb-2">$1.10 <span className="text-xs font-normal text-stone-400">/ mes</span></p>
-           <ul className="space-y-2 mb-4">
-               <li className="text-xs text-stone-600 flex gap-2">
-                   <div className="w-1 h-1 bg-indigo-500 rounded-full mt-1.5"></div>
-                   12 Sesiones de 15 min.
-               </li>
-               <li className="text-xs text-stone-600 flex gap-2">
-                   <div className="w-1 h-1 bg-indigo-500 rounded-full mt-1.5"></div>
-                   Audio Streaming In/Out.
-               </li>
-           </ul>
-           <div className="text-[10px] text-stone-400 bg-stone-50 p-2 rounded">
-               El costo más alto debido al procesamiento de audio en tiempo real.
-           </div>
-        </div>
-
-        {/* Gemini Search Grounding */}
-        <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm hover:shadow-md transition-shadow">
-           <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-sky-100 rounded-xl text-sky-600">
-                <Globe className="w-6 h-6" />
-              </div>
-              <div>
-                <h4 className="font-bold text-stone-800 text-lg">Investigación</h4>
-                <p className="text-xs text-stone-500">Google Search Tool</p>
-              </div>
-           </div>
-           <p className="text-3xl font-bold text-stone-800 mb-2">$1.75 <span className="text-xs font-normal text-stone-400">/ mes</span></p>
-           <ul className="space-y-2 mb-4">
-               <li className="text-xs text-stone-600 flex gap-2">
-                   <div className="w-1 h-1 bg-sky-500 rounded-full mt-1.5"></div>
-                   50 Búsquedas profundas.
-               </li>
-               <li className="text-xs text-stone-600 flex gap-2">
-                   <div className="w-1 h-1 bg-sky-500 rounded-full mt-1.5"></div>
-                   Validación de datos.
-               </li>
-           </ul>
-           <div className="text-[10px] text-stone-400 bg-stone-50 p-2 rounded">
-               $35 por cada 1000 consultas de grounding.
-           </div>
-        </div>
-
-        {/* Chat & DB */}
-        <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm hover:shadow-md transition-shadow">
-           <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-amber-100 rounded-xl text-amber-600">
-                <Database className="w-6 h-6" />
-              </div>
-              <div>
-                <h4 className="font-bold text-stone-800 text-lg">Chat & DB</h4>
-                <p className="text-xs text-stone-500">Flash 2.5 & Supabase</p>
-              </div>
-           </div>
-           <p className="text-3xl font-bold text-stone-800 mb-2">$0.15 <span className="text-xs font-normal text-stone-400">/ mes</span></p>
-           <ul className="space-y-2 mb-4">
-               <li className="text-xs text-stone-600 flex gap-2">
-                   <div className="w-1 h-1 bg-amber-500 rounded-full mt-1.5"></div>
-                   Chat de Texto Ilimitado.
-               </li>
-               <li className="text-xs text-stone-600 flex gap-2">
-                   <div className="w-1 h-1 bg-amber-500 rounded-full mt-1.5"></div>
-                   Almacenamiento Datos.
-               </li>
-           </ul>
-           <div className="text-[10px] text-stone-400 bg-stone-50 p-2 rounded">
-               Flash es extremadamente económico. Supabase Free Tier cubre hasta 50k usuarios.
-           </div>
+        {/* Toggle Monthly/Yearly */}
+        <div className="flex items-center justify-center mt-8 gap-4">
+          <span className={`text-sm font-bold ${billingCycle === 'monthly' ? 'text-slate-900' : 'text-slate-400'}`}>Mensual</span>
+          <button
+            onClick={() => setBillingCycle(prev => prev === 'monthly' ? 'yearly' : 'monthly')}
+            className={`w-14 h-8 rounded-full p-1 transition-colors duration-300 ${billingCycle === 'yearly' ? 'bg-indigo-600' : 'bg-slate-200'}`}
+          >
+            <div className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${billingCycle === 'yearly' ? 'translate-x-6' : 'translate-x-0'}`} />
+          </button>
+          <span className={`text-sm font-bold ${billingCycle === 'yearly' ? 'text-slate-900' : 'text-slate-400'}`}>
+            Anual <span className="text-indigo-600 text-xs bg-indigo-50 px-2 py-0.5 rounded-full ml-1">-20%</span>
+          </span>
         </div>
       </div>
 
-      <div className="mt-8 bg-indigo-50 border border-indigo-100 p-4 rounded-xl flex gap-3 items-start">
-          <AlertCircle className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
-          <div>
-              <h4 className="font-bold text-indigo-900 text-sm">Nota para Administradores</h4>
-              <p className="text-xs text-indigo-700 mt-1">
-                  Estos costos son estimados directos de API. No incluyen costos de desarrollo, marketing o personal humano. 
-                  Para escalabilidad (1000+ estudiantes), se recomienda contactar a Google Cloud para descuentos por volumen.
-              </p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        {plans.map((plan) => (
+          <div
+            key={plan.id}
+            className={`relative bg-white rounded-2xl p-8 border transition-all duration-300 hover:-translate-y-2 
+              ${plan.popular
+                ? 'border-indigo-500 shadow-2xl shadow-indigo-500/10 z-10 scale-105'
+                : 'border-slate-100 shadow-xl hover:shadow-2xl'
+              }
+            `}
+          >
+            {plan.popular && (
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg flex items-center gap-1">
+                <Star className="w-3 h-3 fill-white" /> MÁS POPULAR
+              </div>
+            )}
+
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-6 
+              ${plan.id === 'premium' ? 'bg-indigo-600' : 'bg-slate-50'}
+            `}>
+              {plan.icon}
+            </div>
+
+            <h3 className="text-xl font-bold text-slate-900">{plan.name}</h3>
+            <p className="text-slate-500 text-sm mt-2 min-h-[40px]">{plan.description}</p>
+
+            <div className="my-6">
+              {plan.price !== null ? (
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-black text-slate-900">${plan.price}</span>
+                  <span className="text-slate-400 font-medium">/ {billingCycle === 'monthly' ? 'mes' : 'año'}</span>
+                </div>
+              ) : (
+                <div className="text-4xl font-black text-slate-900 tracking-tight">Contactar</div>
+              )}
+            </div>
+
+            <button
+              onClick={() => onPlanSelect && onPlanSelect(plan.id)}
+              className={`w-full py-3 rounded-xl font-bold transition-all mb-8
+                ${plan.id === 'premium'
+                  ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200'
+                  : plan.id === 'school'
+                    ? 'bg-cyan-600 text-white hover:bg-cyan-700'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }
+              `}
+            >
+              {plan.cta}
+            </button>
+
+            <div className="space-y-4">
+              {plan.features.map((feature, idx) => (
+                <div key={idx} className="flex items-start gap-3">
+                  <div className={`mt-0.5 p-0.5 rounded-full flex-shrink-0 
+                    ${plan.id === 'premium' ? 'bg-indigo-100' : 'bg-slate-100'}
+                  `}>
+                    <Check className={`w-3 h-3 ${plan.id === 'premium' ? 'text-indigo-600' : 'text-slate-600'}`} />
+                  </div>
+                  <span className="text-sm text-slate-600 font-medium leading-tight">{feature}</span>
+                </div>
+              ))}
+
+              {plan.missing.map((feature, idx) => (
+                <div key={idx} className="flex items-start gap-3 opacity-50">
+                  <div className="mt-0.5 p-0.5 rounded-full bg-slate-50 flex-shrink-0">
+                    <X className="w-3 h-3 text-slate-400" />
+                  </div>
+                  <span className="text-sm text-slate-400 leading-tight">{feature}</span>
+                </div>
+              ))}
+            </div>
           </div>
+        ))}
+      </div>
+
+      <div className="max-w-3xl mx-auto mt-16 text-center">
+        <div className="flex items-center justify-center gap-2 text-slate-400 mb-4">
+          <Shield className="w-5 h-5" />
+          <span className="text-sm font-medium">Pago Seguro con Stripe • Cancelación en cualquier momento</span>
+        </div>
+        <p className="text-xs text-slate-400">
+          Los precios están en USD. Impuestos locales pueden aplicar.
+          <a href="#" className="underline ml-1 hover:text-indigo-500">Términos del Servicio</a>
+        </p>
       </div>
     </div>
   );
