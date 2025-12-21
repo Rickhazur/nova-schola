@@ -1,0 +1,8 @@
+{
+  "name": "Nova Schola Tutoring",
+  "description": "Plataforma de tutorías personalizadas de alto rendimiento con IA.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ]
+}
